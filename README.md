@@ -37,6 +37,7 @@ Create `calculator-metadata.json`:
 
 ```json
 {
+    "type": "function",
     "name": "calculator",
     "description": "Performs basic mathematical operations",
     "parameters": {

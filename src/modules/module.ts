@@ -8,6 +8,7 @@ import { pathToFileURL } from 'url';
 const execAsync = promisify(exec);
 
 export interface ToolMetadata {
+    type: string;
     name: string;
     description: string;
     parameters: any;
@@ -107,7 +108,10 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
     
     try {
         const metadataContent = await readFile(metadataPath, 'utf-8');
-        metadata = JSON.parse(metadataContent);
+        const fullMetadata = JSON.parse(metadataContent);
+        // We removed the dependencies because it is not necessary for the LLM
+        const { dependencies, ...cleanMetadata } = fullMetadata;
+        metadata = cleanMetadata as ToolMetadata;
     } catch (error) {
         throw new Error(`X Could not load metadata for tool "${name}": ${error}`);
     }
