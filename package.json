@@ -1,24 +1,30 @@
 {
-  "name": "ishikawa-toolkit",
+  "name": "@aquiles-ai/ishikawa-toolkit",
   "version": "1.0.0",
-  "description": "<div align=\"center\">",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "Extensible framework for creating and managing LLM function calling",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Aquiles-ai/Ishikawa-Toolkit.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": ["ai", "function_calling"],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "author": "Aquiles-ai / Fredy Rivera",
+  "license": "Apache-2.0",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/Aquiles-ai/Ishikawa-Toolkit/issues"
   },
   "homepage": "https://github.com/Aquiles-ai/Ishikawa-Toolkit#readme",
   "devDependencies": {
+    "@types/node": "^25.0.3",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
