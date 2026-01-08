@@ -4,8 +4,13 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
+import envPaths from 'env-paths';
 
 const execAsync = promisify(exec);
+
+const paths = envPaths('Ishikawa-Toolkit', { suffix: '' });
+const TOOLS_BASE_DIR = paths.data;
+await mkdir(TOOLS_BASE_DIR, { recursive: true });
 
 export interface ToolMetadata {
     type: string;
@@ -29,7 +34,7 @@ export async function ToolRegister(
 ) {
     const metadata = await parseJsonInput(json_llm);
 
-    const toolPath = join(process.cwd(), 'tools', name);
+    const toolPath = join(TOOLS_BASE_DIR, 'tools', name);
     await mkdir(toolPath, { recursive: true });
 
     const targetCodePath = join(toolPath, 'index.ts');
@@ -93,7 +98,7 @@ async function installDependencies(toolPath: string): Promise<void> {
 }
 
 export async function ToolLoader(name: string): Promise<LoadedTool> {
-    const toolPath = join(process.cwd(), 'tools', name);
+    const toolPath = join(TOOLS_BASE_DIR, 'tools', name);
     
     // Step 1: Verify tool exists
     try {
@@ -152,7 +157,7 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
 }
 
 export async function ToolList(): Promise<string[]> {
-    const toolsDir = join(process.cwd(), 'tools');
+    const toolsDir = join(TOOLS_BASE_DIR, 'tools');
     
     try {
         const entries = await readdir(toolsDir, { withFileTypes: true });
