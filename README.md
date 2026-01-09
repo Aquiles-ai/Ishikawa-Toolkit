@@ -155,7 +155,7 @@ let input = [
 let response = await client.responses.create({
     model: "gpt-oss-20b",
     tools: toolsMetadata,
-    input,
+    input: input,
 });
 
 // console.log("Response 1:", response);
