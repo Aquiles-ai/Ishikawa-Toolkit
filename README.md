@@ -98,7 +98,62 @@ console.log(tools); // Output: ['calculator', ...]
 
 If your tool requires environment variables, you can provide a `.env` file during registration. This parameter is optional and accepts either a file path or direct content.
 
-### Using a .env file path
+### Complete Example with Environment Variables
+
+**1. Create your tool that uses environment variables**
+
+Create `api-client.ts`:
+```typescript
+import dotenv from 'dotenv';
+
+// Load environment variables
+dotenv.config();
+
+export default async function apiClient({endpoint}: {endpoint: string}) {
+    const apiKey = process.env.API_KEY;
+    const baseUrl = process.env.API_URL;
+    
+    if (!apiKey) {
+        throw new Error('API_KEY not found in environment');
+    }
+    
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+        headers: {
+            'Authorization': `Bearer ${apiKey}`
+        }
+    });
+    
+    return await response.json();
+}
+```
+
+**2. Create metadata with dotenv dependency**
+
+Create `api-metadata.json`:
+```json
+{
+    "type": "function",
+    "name": "apiClient",
+    "description": "Makes authenticated API requests",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "endpoint": { 
+                "type": "string", 
+                "description": "API endpoint to call" 
+            }
+        },
+        "required": ["endpoint"]
+    },
+    "dependencies": {
+        "dotenv": "^16.0.0"
+    }
+}
+```
+
+**3. Register with environment variables**
+
+Using a .env file path:
 ```typescript
 await manager.createTool(
     'api-client',
@@ -109,7 +164,8 @@ await manager.createTool(
 );
 ```
 
-### Using direct .env content
+Or using direct .env content:
+
 ```typescript
 await manager.createTool(
     'api-client',
@@ -120,7 +176,17 @@ await manager.createTool(
 );
 ```
 
+**4. Use the tool**
+```typescript
+const result = await manager.executeTool('api-client', {
+    endpoint: '/users/123'
+});
+```
+
 ### Without environment variables
+
+For tools that don't need environment variables, simply omit the last parameter:
+
 ```typescript
 await manager.createTool(
     'calculator',
@@ -131,7 +197,7 @@ await manager.createTool(
 );
 ```
 
-The `.env` file will be copied to the tool's directory and will be available when the tool executes.
+The `.env` file will be automatically placed in the tool's execution directory, making it immediately available when the tool runs.
 
 ## Using with Local LLMs
 
