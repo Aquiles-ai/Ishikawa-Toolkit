@@ -9,9 +9,10 @@ export class ToolManager {
         name: string, 
         code_path: string, 
         auto_install: boolean, 
-        json_llm: string
+        json_llm: string,
+        env_file?: string
     ) {
-        await ToolRegister(name, code_path, auto_install, json_llm);
+        await ToolRegister(name, code_path, auto_install, json_llm, env_file);
         console.log(`Tool "${name}" registered`);
     }
 

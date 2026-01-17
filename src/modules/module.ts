@@ -30,7 +30,8 @@ export async function ToolRegister(
     name: string, 
     code_path: string, 
     auto_install: boolean, 
-    json_llm: string
+    json_llm: string,
+    env_file?: string
 ) {
     const metadata = await parseJsonInput(json_llm);
 
@@ -42,6 +43,12 @@ export async function ToolRegister(
 
     const metadataPath = join(toolPath, 'function.json');
     await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+
+    if (env_file) {
+        const envContent = await parseEnvInput(env_file);
+        const targetEnvPath = join(toolPath, '.env');
+        await writeFile(targetEnvPath, envContent);
+    }
 
     await createPackageJson(toolPath, name, metadata.dependencies || {});
 
@@ -64,6 +71,18 @@ async function parseJsonInput(input: string): Promise<any> {
         } catch (error) {
             throw new Error(`X Could not parse JSON: ${error}`);
         }
+    }
+}
+
+async function parseEnvInput(input: string): Promise<string> {
+    if (input.includes('=') && !input.includes('/') && !input.includes('\\')) {
+        return input;
+    }
+    try {
+        const fileContent = await readFile(input, 'utf-8');
+        return fileContent;
+    } catch (error) {
+        return input;
     }
 }
 

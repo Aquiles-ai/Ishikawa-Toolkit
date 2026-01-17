@@ -93,6 +93,46 @@ console.log(result2); // Output: 5
 const tools = await manager.list();
 console.log(tools); // Output: ['calculator', ...]
 ```
+
+## Environment Variables (Optional)
+
+If your tool requires environment variables, you can provide a `.env` file during registration. This parameter is optional and accepts either a file path or direct content.
+
+### Using a .env file path
+```typescript
+await manager.createTool(
+    'api-client',
+    './api-client.ts',
+    true,
+    './api-metadata.json',
+    './config/.env' // Path to .env file
+);
+```
+
+### Using direct .env content
+```typescript
+await manager.createTool(
+    'api-client',
+    './api-client.ts',
+    true,
+    './api-metadata.json',
+    'API_KEY=your-key-here\nAPI_URL=https://api.example.com' // Direct content
+);
+```
+
+### Without environment variables
+```typescript
+await manager.createTool(
+    'calculator',
+    './calculator.ts',
+    true,
+    './calculator-metadata.json'
+    // No .env parameter needed
+);
+```
+
+The `.env` file will be copied to the tool's directory and will be available when the tool executes.
+
 ## Using with Local LLMs
 
 Ishikawa-toolkit works seamlessly with local LLM servers like vLLM. Here's how to set up function calling with a local model:
