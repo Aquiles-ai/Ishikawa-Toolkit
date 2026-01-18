@@ -47,6 +47,7 @@ export async function ToolRegister(
     if (env_file) {
         const envContent = await parseEnvInput(env_file);
         const distPath = join(toolPath, 'dist');
+        await mkdir(distPath, { recursive: true });
         const targetEnvPath = join(distPath, '.env');
         await writeFile(targetEnvPath, envContent);
     }
