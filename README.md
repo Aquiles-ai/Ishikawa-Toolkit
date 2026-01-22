@@ -98,16 +98,15 @@ console.log(tools); // Output: ['calculator', ...]
 
 If your tool requires environment variables, you can provide a `.env` file during registration. This parameter is optional and accepts either a file path or direct content.
 
+**Important:** The toolkit automatically loads the `.env` file for each tool before execution. You **do not need** to call `dotenv.config()` in your tool code - just access `process.env` directly.
+
 ### Complete Example with Environment Variables
 
 **1. Create your tool that uses environment variables**
 
 Create `api-client.ts`:
 ```typescript
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+// NO need to import or call dotenv.config() - env vars are loaded automatically!
 
 export default async function apiClient({endpoint}: {endpoint: string}) {
     const apiKey = process.env.API_KEY;
@@ -127,7 +126,7 @@ export default async function apiClient({endpoint}: {endpoint: string}) {
 }
 ```
 
-**2. Create metadata with dotenv dependency**
+**2. Create metadata (no need to include dotenv as dependency)**
 
 Create `api-metadata.json`:
 ```json
@@ -145,9 +144,7 @@ Create `api-metadata.json`:
         },
         "required": ["endpoint"]
     },
-    "dependencies": {
-        "dotenv": "^16.0.0"
-    }
+    "dependencies": {}
 }
 ```
 
@@ -183,6 +180,13 @@ const result = await manager.executeTool('api-client', {
 });
 ```
 
+### How Environment Variables Work
+
+- Each tool gets its **own isolated** `.env` file in its execution directory
+- Environment variables are loaded **automatically** before the tool executes
+- After execution, the environment is restored to prevent pollution between tools
+- You simply access variables via `process.env.VARIABLE_NAME` - no manual configuration needed
+
 ### Without environment variables
 
 For tools that don't need environment variables, simply omit the last parameter:
@@ -196,8 +200,6 @@ await manager.createTool(
     // No .env parameter needed
 );
 ```
-
-The `.env` file will be automatically placed in the tool's execution directory, making it immediately available when the tool runs.
 
 ## Using with Local LLMs
 
@@ -263,8 +265,6 @@ let response = await client.responses.create({
     tools: toolsMetadata,
     input: input,
 });
-
-// console.log("Response 1:", response);
 
 for (const item of response.output) {
     if (item.type == "function_call") {

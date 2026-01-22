@@ -5,6 +5,7 @@ import { promisify } from 'util';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
 import envPaths from 'env-paths';
+import dotenv from 'dotenv';
 
 const execAsync = promisify(exec);
 
@@ -151,7 +152,17 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         throw new Error(`X Tool "${name}" not compiled. Run ToolCompiler first.`);
     }
 
-    // Step 4: Dynamic import of the compiled module
+    // Step 4: Check if .env exists for this tool
+    const envPath = join(toolPath, 'dist', '.env');
+    let hasEnvFile = false;
+    try {
+        await access(envPath);
+        hasEnvFile = true;
+    } catch {
+        // No .env file for this tool
+    }
+
+    // Step 5: Dynamic import of the compiled module
     let toolModule: any;
     
     try {
@@ -161,12 +172,35 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         throw new Error(`X Could not import tool "${name}": ${error}`);
     }
 
-    // Step 5: Get the exported function
-    const execute = toolModule.default || toolModule.execute || toolModule[name];
+    // Step 6: Get the exported function
+    const originalExecute = toolModule.default || toolModule.execute || toolModule[name];
     
-    if (!execute || typeof execute !== 'function') {
+    if (!originalExecute || typeof originalExecute !== 'function') {
         throw new Error(`X Tool "${name}" does not export a valid function`);
     }
+
+    // Step 7: Create a wrapper that loads the tool's .env before execution
+    const execute = async (...args: any[]) => {
+        // Save current env state
+        const originalEnv = { ...process.env };
+        
+        try {
+            // Load this tool's .env if it exists
+            if (hasEnvFile) {
+                dotenv.config({ path: envPath });
+            }
+            
+            // Execute the tool function
+            const result = await originalExecute(...args);
+            
+            return result;
+        } finally {
+            // Restore original env state to avoid pollution
+            if (hasEnvFile) {
+                process.env = originalEnv;
+            }
+        }
+    };
 
     console.log(`Tool "${name}" loaded successfully`);
 
