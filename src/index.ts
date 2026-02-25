@@ -1,4 +1,5 @@
 import { ToolRegister, ToolLoader, ToolList, LoadedTool } from "./modules/module.js";
+import { zodToJsonSchema } from "./modules/converter/ztojson.js";
 
 export class ToolManager {
     private cache: Map<string, LoadedTool> = new Map();
@@ -67,3 +68,5 @@ export class ToolManager {
         return removed;
     }
 }
+
+export { zodToJsonSchema };
