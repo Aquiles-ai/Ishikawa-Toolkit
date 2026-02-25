@@ -27,6 +27,40 @@ export interface LoadedTool {
     path: string;
 }
 
+export async function ToolRegisterFromSchema(
+    code_path: string,
+    schema: string | ToolMetadata,
+    env_file?: string
+) {
+
+    const metadata: ToolMetadata = typeof schema === 'string'
+        ? await parseJsonInput(schema)
+        : schema;
+
+    const toolPath = join(TOOLS_BASE_DIR, 'tools', metadata.name);
+    await mkdir(toolPath, { recursive: true });
+
+    const targetCodePath = join(toolPath, 'index.ts');
+    await copyFile(code_path, targetCodePath);
+
+    const metadataPath = join(toolPath, 'function.json');
+    await writeFile(metadataPath, JSON.stringify(metadata, null, 2));
+
+    if (env_file) {
+        const envContent = await parseEnvInput(env_file);
+        const distPath = join(toolPath, 'dist');
+        await mkdir(distPath, { recursive: true });
+        const targetEnvPath = join(distPath, '.env');
+        await writeFile(targetEnvPath, envContent);
+    }
+
+    await createPackageJson(toolPath, metadata.name, metadata.dependencies || {});
+    await installDependencies(toolPath);
+    await ToolCompiler(toolPath);
+
+    console.log(`Tool "${metadata.name}" registered successfully at: ${toolPath}`);
+}
+
 export async function ToolRegister(
     name: string, 
     code_path: string, 
@@ -197,7 +231,13 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         } finally {
             // Restore original env state to avoid pollution
             if (hasEnvFile) {
-                process.env = originalEnv;
+                for (const key of Object.keys(process.env)) {
+                    if (!(key in originalEnv)) {
+                        delete process.env[key];
+                    }
+                }
+
+                Object.assign(process.env, originalEnv);
             }
         }
     };

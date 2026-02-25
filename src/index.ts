@@ -1,4 +1,4 @@
-import { ToolRegister, ToolLoader, ToolList, LoadedTool } from "./modules/module.js";
+import { ToolRegister, ToolLoader, ToolList, LoadedTool, ToolMetadata, ToolRegisterFromSchema } from "./modules/module.js";
 import { zodToJsonSchema } from "./modules/converter/ztojson.js";
 
 export class ToolManager {
@@ -15,6 +15,14 @@ export class ToolManager {
     ) {
         await ToolRegister(name, code_path, auto_install, json_llm, env_file);
         console.log(`Tool "${name}" registered`);
+    }
+
+    async register(
+        code_path: string,
+        schema: string | ToolMetadata,
+        env_file?: string
+    ){
+        await ToolRegisterFromSchema(code_path, schema, env_file);
     }
 
     async getTool(name: string, forceReload = false): Promise<LoadedTool> {
