@@ -1,6 +1,6 @@
 {
   "name": "@aquiles-ai/ishikawa-toolkit",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "Extensible framework for creating and managing LLM function calling",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,6 +19,9 @@
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
+  "bin": {
+    "ishikawa": "./dist/cli.js"
+  },
   "author": "Aquiles-ai / Fredy Rivera",
   "license": "Apache-2.0",
   "type": "module",
@@ -32,7 +35,8 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "dotenv": "^17.2.3",
+    "commander": "^14.0.3",
+    "dotenv": "^17.3.1",
     "zod": "^4.3.6"
   }
 }

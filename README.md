@@ -31,7 +31,31 @@ export default function calculator({a, b, operation}: {a: number; b: number; ope
 }
 ```
 
-### 2. Create metadata JSON
+> **Important:** The `name` in the schema must match the exported function name in your `.ts` file. In this case, the file exports `function calculator` so the schema name must be `"calculator"`.
+
+### 2. Define the schema
+
+**Option A — Using `zodToJsonSchema()`**
+
+Define the schema in code using Zod. No separate file needed.
+
+```typescript
+import { zodToJsonSchema } from '@aquiles-ai/ishikawa-toolkit';
+import * as z from 'zod';
+
+const schema = z.object({
+    a: z.number().meta({ description: 'First number' }),
+    b: z.number().meta({ description: 'Second number' }),
+    operation: z.enum(['add', 'subtract', 'multiply', 'divide'])
+        .meta({ description: 'Operation to perform' })
+});
+
+const metadata = zodToJsonSchema('calculator', 'Performs basic mathematical operations', schema, {
+    'mathjs': '^12.0.0' // optional dependencies
+});
+```
+
+**Option B — Raw JSON Schema file**
 
 Create `calculator-metadata.json`:
 
@@ -66,13 +90,11 @@ import { ToolManager } from '@aquiles-ai/ishikawa-toolkit';
 
 const manager = new ToolManager();
 
-// Register the tool
-await manager.createTool(
-    'calculator',
-    './calculator.ts',
-    true, // auto-install dependencies
-    './calculator-metadata.json'
-);
+// Option A — register with zodToJsonSchema output
+await manager.register('./calculator.ts', metadata);
+
+// Option B — register with a path to JSON file
+await manager.register('./calculator.ts', './calculator-metadata.json');
 
 // Load and execute
 const tool = await manager.getTool('calculator');
@@ -82,7 +104,7 @@ console.log(tool.metadata.description);
 // Output: "Performs basic mathematical operations"
 
 // Execute the tool
-const result = await tool.execute({a: 10, b: 5, operation:'add'});
+const result = await tool.execute({a: 10, b: 5, operation: 'add'});
 console.log(result); // Output: 15
 
 // Or use shortcut
@@ -126,51 +148,40 @@ export default async function apiClient({endpoint}: {endpoint: string}) {
 }
 ```
 
-**2. Create metadata (no need to include dotenv as dependency)**
+**2. Define the schema**
 
-Create `api-metadata.json`:
-```json
-{
-    "type": "function",
-    "name": "apiClient",
-    "description": "Makes authenticated API requests",
-    "parameters": {
-        "type": "object",
-        "properties": {
-            "endpoint": { 
-                "type": "string", 
-                "description": "API endpoint to call" 
-            }
-        },
-        "required": ["endpoint"]
-    },
-    "dependencies": {}
-}
+```typescript
+import { zodToJsonSchema } from '@aquiles-ai/ishikawa-toolkit';
+import * as z from 'zod';
+
+const metadata = zodToJsonSchema(
+    'apiClient',
+    'Makes authenticated API requests',
+    z.object({
+        endpoint: z.string().meta({ description: 'API endpoint to call' })
+    })
+);
 ```
 
 **3. Register with environment variables**
 
-Using a .env file path:
+Using a `.env` file path:
 ```typescript
-await manager.createTool(
-    'api-client',
+await manager.register('./api-client.ts', metadata, './config/.env');
+```
+
+Or using direct `.env` content:
+```typescript
+await manager.register(
     './api-client.ts',
-    true,
-    './api-metadata.json',
-    './config/.env' // Path to .env file
+    metadata,
+    'API_KEY=your-key-here\nAPI_URL=https://api.example.com'
 );
 ```
 
-Or using direct .env content:
-
+The same works with a JSON path:
 ```typescript
-await manager.createTool(
-    'api-client',
-    './api-client.ts',
-    true,
-    './api-metadata.json',
-    'API_KEY=your-key-here\nAPI_URL=https://api.example.com' // Direct content
-);
+await manager.register('./api-client.ts', './api-metadata.json', './config/.env');
 ```
 
 **4. Use the tool**
@@ -187,18 +198,40 @@ const result = await manager.executeTool('api-client', {
 - After execution, the environment is restored to prevent pollution between tools
 - You simply access variables via `process.env.VARIABLE_NAME` - no manual configuration needed
 
-### Without environment variables
+## How Isolation Works
 
-For tools that don't need environment variables, simply omit the last parameter:
+Each registered tool lives in its own directory under the toolkit's data path:
 
-```typescript
-await manager.createTool(
-    'calculator',
-    './calculator.ts',
-    true,
-    './calculator-metadata.json'
-    // No .env parameter needed
-);
+```
+TOOLS_BASE_DIR/
+└── tools/
+    ├── calculator/
+    │   ├── index.ts
+    │   ├── function.json
+    │   ├── package.json
+    │   └── dist/
+    │       ├── index.js
+    │       └── node_modules/   ← mathjs@12 isolated here
+    └── data-processor/
+        └── dist/
+            └── node_modules/   ← mathjs@11 isolated here
+```
+
+When a tool is loaded, it is imported via `import(fileURL)` from its own directory. Node.js resolves dependencies relative to the imported file's location, so each tool loads its own versions of packages with zero conflicts no workers or separate processes needed.
+
+## CLI
+
+List all tools currently registered in the system:
+
+```bash
+npx ishikawa list
+```
+
+Example output:
+
+```
+calculator
+api-client
 ```
 
 ## Using with Local LLMs
@@ -240,7 +273,7 @@ const allToolsMetadata = await Promise.all(
         try {
             return await tools.getMetadataTool(toolName);
         } catch (error) {
-            console.error(`X Error cargando ${toolName}:`, error);
+            console.error(`X Error loading ${toolName}:`, error);
             return null;
         }
     })
