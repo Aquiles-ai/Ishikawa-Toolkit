@@ -20,6 +20,7 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+    "removeComments": false,
 
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
