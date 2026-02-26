@@ -1,6 +1,6 @@
 {
   "name": "@aquiles-ai/ishikawa-toolkit",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Extensible framework for creating and managing LLM function calling",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,7 +13,26 @@
   },
   "keywords": [
     "ai",
-    "function_calling"
+    "llm",
+    "function-calling",
+    "tool-calling",
+    "ai-tools",
+    "ai-agent",
+    "agent",
+    "typescript",
+    "zod",
+    "json-schema",
+    "openai",
+    "vllm",
+    "anthropic",
+    "ollama",
+    "local-llm",
+    "tool-manager",
+    "dependency-isolation",
+    "agentic",
+    "generative-ai",
+    "mcp",
+    "framework"
   ],
   "scripts": {
     "build": "tsc",
