@@ -189,9 +189,12 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
     // Step 4: Check if .env exists for this tool
     const envPath = join(toolPath, 'dist', '.env');
     let hasEnvFile = false;
+    let toolEnvVars: Record<string, string> = {};
     try {
         await access(envPath);
         hasEnvFile = true;
+        const envContent = await readFile(envPath, 'utf-8');
+        toolEnvVars = dotenv.parse(envContent) as Record<string, string>;
     } catch {
         // No .env file for this tool
     }
@@ -221,7 +224,7 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         try {
             // Load this tool's .env if it exists
             if (hasEnvFile) {
-                dotenv.config({ path: envPath });
+                dotenv.config({ path: envPath, override: true });
             }
             
             // Execute the tool function
@@ -231,9 +234,11 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         } finally {
             // Restore original env state to avoid pollution
             if (hasEnvFile) {
-                for (const key of Object.keys(process.env)) {
+                for (const key of Object.keys(toolEnvVars)) {
                     if (!(key in originalEnv)) {
-                        delete process.env[key];
+                    delete process.env[key];
+                    } else {
+                        process.env[key] = originalEnv[key]!;
                     }
                 }
 
