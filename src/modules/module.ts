@@ -203,6 +203,10 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
     let toolModule: any;
     
     try {
+        // Load this tool's .env if it exists
+        if (hasEnvFile) {
+            dotenv.config({ path: envPath, override: true });
+        }
         const fileUrl = pathToFileURL(compiledPath).href;
         toolModule = await import(fileUrl);
     } catch (error) {
@@ -222,10 +226,6 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         const originalEnv = { ...process.env };
         
         try {
-            // Load this tool's .env if it exists
-            if (hasEnvFile) {
-                dotenv.config({ path: envPath, override: true });
-            }
             
             // Execute the tool function
             const result = await originalExecute(...args);

@@ -1,6 +1,6 @@
 {
   "name": "@aquiles-ai/ishikawa-toolkit",
-  "version": "2.0.1",
+  "version": "2.2.0",
   "description": "Extensible framework for creating and managing LLM function calling",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -56,6 +56,7 @@
   "dependencies": {
     "commander": "^14.0.3",
     "dotenv": "^17.3.1",
+    "env-paths": "^4.0.0",
     "zod": "^4.3.6"
   }
 }
