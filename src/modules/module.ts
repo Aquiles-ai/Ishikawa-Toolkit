@@ -226,7 +226,11 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
         const originalEnv = { ...process.env };
         
         try {
-            
+            // Load this tool's .env if it exists
+            if (hasEnvFile) {
+                dotenv.config({ path: envPath, override: true });
+            }
+
             // Execute the tool function
             const result = await originalExecute(...args);
             
@@ -241,8 +245,6 @@ export async function ToolLoader(name: string): Promise<LoadedTool> {
                         process.env[key] = originalEnv[key]!;
                     }
                 }
-
-                Object.assign(process.env, originalEnv);
             }
         }
     };
